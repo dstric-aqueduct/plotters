@@ -151,6 +151,7 @@ impl KeyPointHint for BoldPoints {
 }
 
 /// The key point hint indicates that we are using the key points for the light grid lines
+#[derive(Debug)]
 pub struct LightPoints {
     bold_points_num: usize,
     light_limit: usize,

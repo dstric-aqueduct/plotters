@@ -123,7 +123,10 @@ macro_rules! gen_key_points_comp {
 
             let range = (range.0.min(range.1) as f64, range.1.max(range.0) as f64);
 
-            assert!(!(range.0.is_nan() || range.1.is_nan()));
+            // Prevent invalid input ranges (NaN)
+            if range.0.is_nan() || range.1.is_nan() {
+                return vec![];
+            }
 
             if (range.0 - range.1).abs() < f64::EPSILON {
                 return vec![range.0 as $type];
@@ -155,9 +158,12 @@ macro_rules! gen_key_points_comp {
                 value_granularity *= 10.0;
             }
 
-            'outer: loop {
+            let mut iteration_limit = 100;  // Set iteration limit to prevent infinite loops
+            while iteration_limit > 0 {
                 let old_scale = scale;
-                for nxt in [2.0, 5.0, 10.0].iter() {
+                let mut scaled = false;
+
+                for &nxt in [2.0, 5.0, 10.0].iter() {
                     let mut new_left = range.0 - rem_euclid(range.0, old_scale / nxt);
                     if new_left < range.0 {
                         new_left += old_scale / nxt;
@@ -166,14 +172,25 @@ macro_rules! gen_key_points_comp {
 
                     let npoints = 1.0 + ((new_right - new_left) / old_scale * nxt);
 
-                    if npoints.round() as usize > max_points {
-                        break 'outer;
+                    if npoints.round() as usize <= max_points {
+                        scale = old_scale / nxt;
+                        scaled = true;
+                        break;
                     }
-
-                    scale = old_scale / nxt;
                 }
+
+                if scaled {
+                    break;
+                }
+
+                // Adjust scale and value granularity
                 scale = old_scale / 10.0;
                 value_granularity /= 10.0;
+
+                iteration_limit -= 1;
+                if iteration_limit == 0 {
+                    return vec![range.0 as $type];
+                }
             }
 
             let mut ret = vec![];
@@ -199,6 +216,10 @@ macro_rules! gen_key_points_comp {
                 }
                 ret.push((left_relative + left_base) as $type);
                 left_relative += scale;
+
+                if (right - left_relative).abs() < f64::EPSILON {
+                    break;
+                }
             }
             return ret;
         }
