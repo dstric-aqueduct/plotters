@@ -158,7 +158,7 @@ macro_rules! gen_key_points_comp {
                 value_granularity *= 10.0;
             }
 
-            let mut iteration_limit = 100;  // Set iteration limit to prevent infinite loops
+            let mut iteration_limit = 1000;  // Set iteration limit to prevent infinite loops
             while iteration_limit > 0 {
                 let old_scale = scale;
                 let mut scaled = false;
@@ -208,6 +208,7 @@ macro_rules! gen_key_points_comp {
             let left_base = (left / value_granularity).floor() * value_granularity;
             let mut left_relative = left - left_base;
             let right = range.1 - rem_euclid(range.1, scale);
+            let mut iteration_limit = 1000;
             while (right - left_relative - left_base) >= -f64::EPSILON {
                 let new_left_relative =
                     (left_relative / value_granularity).round() * value_granularity;
@@ -217,7 +218,8 @@ macro_rules! gen_key_points_comp {
                 ret.push((left_relative + left_base) as $type);
                 left_relative += scale;
 
-                if (right - left_relative).abs() < f64::EPSILON {
+                iteration_limit -= 1;
+                if iteration_limit == 0 {
                     break;
                 }
             }
