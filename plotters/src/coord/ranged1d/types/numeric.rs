@@ -172,7 +172,7 @@ macro_rules! gen_key_points_comp {
 
                     let npoints = 1.0 + ((new_right - new_left) / old_scale * nxt);
 
-                    if npoints.round() as usize <= max_points {
+                    if npoints.round() as usize >= 2 && npoints.round() as usize <= max_points {
                         scale = old_scale / nxt;
                         scaled = true;
                         break;
@@ -189,11 +189,20 @@ macro_rules! gen_key_points_comp {
 
                 iteration_limit -= 1;
                 if iteration_limit == 0 {
-                    return vec![range.0 as $type];
+                    let step = (range.1 - range.0) / (5 - 1) as f64;
+                    let mut ret: Vec<$type> = (0..5)
+                        .map(|i| (range.0 + step * i as f64) as $type)
+                        .collect();
+                    // Ensure 0 is included if within the range
+                    if range.0 <= 0.0 && range.1 >= 0.0 {
+                        ret.push(0.0 as $type);
+                        ret.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    }
+                    return ret;
                 }
             }
 
-            let mut ret = vec![];
+            let mut ret: Vec<$type> = vec![];
             // In some extreme cases, left might be too big, so that (left + scale) - left == 0 due to
             // floating point error.
             // In this case, we may loop forever. To avoid this, we need to use two variables to store
@@ -223,6 +232,18 @@ macro_rules! gen_key_points_comp {
                     break;
                 }
             }
+                let step = (range.1 - range.0) / (5 - 1) as f64;
+                ret = (0..5)
+                    .map(|i| (range.0 + step * i as f64) as $type)
+                    .collect();
+
+                // Ensure 0 is included if within the range
+                if range.0 <= 0.0 && range.1 >= 0.0 {
+                    ret.push(0.0 as $type);
+                    ret.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                }
+            }
+
             return ret;
         }
     };
