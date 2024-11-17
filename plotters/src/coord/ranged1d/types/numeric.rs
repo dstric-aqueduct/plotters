@@ -158,7 +158,7 @@ macro_rules! gen_key_points_comp {
                 value_granularity *= 10.0;
             }
 
-            let mut iteration_limit = 1000;  // Set iteration limit to prevent infinite loops
+            let mut iteration_limit = 1000; // Set iteration limit to prevent infinite loops
             while iteration_limit > 0 {
                 let old_scale = scale;
                 let mut scaled = false;
@@ -232,6 +232,8 @@ macro_rules! gen_key_points_comp {
                     break;
                 }
             }
+
+            if ret.len() < 2 {
                 let step = (range.1 - range.0) / (5 - 1) as f64;
                 ret = (0..5)
                     .map(|i| (range.0 + step * i as f64) as $type)
